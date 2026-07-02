@@ -6,6 +6,7 @@ export function CartProvider({ children }) {
   const [cart, setCart] = useState([])
   const [tableId, setTableId] = useState(null)
   const [cafeId, setCafeId] = useState(null)
+  const [lastOrderId, setLastOrderId] = useState(null)
 
   function addItem(item) {
     setCart(prev => {
@@ -39,24 +40,26 @@ export function CartProvider({ children }) {
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0)
   const totalPrice = cart.reduce((sum, item) => sum + item.price * item.quantity, 0)
 
-  return (
-    <CartContext.Provider
-      value={{
-        cart,
-        addItem,
-        removeItem,
-        clearCart,
-        totalItems,
-        totalPrice,
-        tableId,
-        setTableId,
-        cafeId,
-        setCafeId,   // 👈 this was missing
-      }}
-    >
-      {children}
-    </CartContext.Provider>
-  )
+ return (
+  <CartContext.Provider
+    value={{
+      cart,
+      addItem,
+      removeItem,
+      clearCart,
+      totalItems,
+      totalPrice,
+      tableId,
+      setTableId,
+      cafeId,
+      setCafeId,
+      lastOrderId,
+      setLastOrderId,
+    }}
+  >
+    {children}
+  </CartContext.Provider>
+)
 }
 
 export function useCart() {
