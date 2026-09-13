@@ -14,7 +14,6 @@ function LandingPage() {
     setError(null)
 
     if (activeTab === 'owner') {
-      // sign up owner with supabase auth
       const { data, error } = await supabase.auth.signUp({
         email: form.email,
         password: form.password,
@@ -26,10 +25,15 @@ function LandingPage() {
         return
       }
 
-      // create cafe
+      // create cafe with 7 day trial
       const { data: cafe, error: cafeError } = await supabase
         .from('cafes')
-        .insert({ name: form.cafeName, phone: form.phone })
+        .insert({
+          name: form.cafeName,
+          phone: form.phone,
+          trial_ends_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+          is_paid: false
+        })
         .select()
         .single()
 
@@ -39,7 +43,6 @@ function LandingPage() {
         return
       }
 
-      // create user record
       await supabase.from('users').insert({
         id: data.user.id,
         cafe_id: cafe.id,
@@ -50,7 +53,6 @@ function LandingPage() {
 
       setSuccess(true)
     } else {
-      // staff signup - just collect info for now
       setSuccess(true)
     }
     setLoading(false)
@@ -134,7 +136,7 @@ function LandingPage() {
             { step: '01', title: 'Sign up your café', desc: 'Create your account and add your menu items in minutes.', icon: '🏪' },
             { step: '02', title: 'Print QR codes', desc: 'Generate unique QR codes for each table and stick them on.', icon: '🖨️' },
             { step: '03', title: 'Customers scan & order', desc: 'No app needed. Customers scan, browse, and order instantly.', icon: '📱' },
-            { step: '04', title: 'Kitchen gets live orders', desc: 'Orders appear on your kitchen screen the moment they\'re placed.', icon: '👨‍🍳' },
+            { step: '04', title: 'Kitchen gets live orders', desc: "Orders appear on your kitchen screen the moment they're placed.", icon: '👨‍🍳' },
           ].map(item => (
             <div key={item.step} className="bg-white rounded-2xl p-5 flex items-start gap-4 shadow-sm">
               <div className="text-2xl flex-shrink-0">{item.icon}</div>
@@ -158,7 +160,9 @@ function LandingPage() {
             { icon: '⚡', title: 'Live Kitchen', desc: 'Orders appear instantly' },
             { icon: '📊', title: 'Analytics', desc: 'Track revenue anytime' },
             { icon: '🍽️', title: 'Menu Manager', desc: 'Update menu in seconds' },
-            { icon: '👥', title: 'Staff Roles', desc: 'Owner and staff access' },
+            { icon: '🧾', title: 'Digital Bills', desc: 'Share bills on WhatsApp' },
+            { icon: '⭐', title: 'Ratings', desc: 'Collect customer feedback' },
+            { icon: '💳', title: 'UPI Payments', desc: 'QR payment per order' },
             { icon: '🔒', title: 'Secure', desc: 'Your data is protected' },
           ].map(feature => (
             <div key={feature.title} className="bg-white rounded-2xl p-4 shadow-sm">
@@ -181,13 +185,16 @@ function LandingPage() {
               <span className="text-4xl font-bold">₹999</span>
               <span className="text-white/70">/month</span>
             </div>
-            <p className="text-white/70 text-xs mt-2">14-day free trial, no credit card needed</p>
+            <p className="text-white/70 text-xs mt-2">7-day free trial · no credit card needed</p>
           </div>
           <div className="space-y-3 mb-6">
             {[
               'QR menu for unlimited tables',
               'Live kitchen dashboard',
               'Owner analytics dashboard',
+              'Digital bills + WhatsApp sharing',
+              'UPI payment QR per order',
+              'Customer ratings system',
               'Menu management',
               'Staff accounts',
               'QR code generator',
@@ -200,17 +207,52 @@ function LandingPage() {
             ))}
           </div>
           <a href="#signup" className="block bg-white text-[#8B9D6A] text-center py-4 rounded-2xl font-bold text-sm">
-            Start 14-day free trial →
+            Start 7-day free trial →
           </a>
+        </div>
+      </div>
+
+      {/* TESTIMONIAL PLACEHOLDER */}
+      <div className="px-6 mb-16">
+        <h2 className="display-font text-2xl font-semibold text-center mb-8">Café owners love it</h2>
+        <div className="space-y-4">
+          {[
+            {
+              name: 'Arjun Sharma',
+              cafe: 'Chai Stop, Chandigarh',
+              text: 'Orders appear on the kitchen screen instantly. No more shouting across the counter.',
+              rating: 5
+            },
+            {
+              name: 'Priya Mehta',
+              cafe: 'The Coffee Corner, Delhi',
+              text: "I check my revenue from home now. Didn't think something this simple could change so much.",
+              rating: 5
+            },
+          ].map(t => (
+            <div key={t.name} className="bg-white rounded-2xl p-5 shadow-sm">
+              <div className="flex mb-3">
+                {'⭐'.repeat(t.rating).split('').map((s, i) => (
+                  <span key={i} className="text-sm">{s}</span>
+                ))}
+              </div>
+              <p className="text-gray-700 text-sm mb-3 leading-relaxed">"{t.text}"</p>
+              <div>
+                <p className="font-semibold text-gray-900 text-sm">{t.name}</p>
+                <p className="text-gray-400 text-xs">{t.cafe}</p>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 
       {/* SIGNUP */}
       <div id="signup" className="px-6 mb-16">
         <h2 className="display-font text-2xl font-semibold text-center mb-2">Get started today</h2>
-        <p className="text-gray-400 text-sm text-center mb-6">Set up your café in under 30 minutes</p>
+        <p className="text-gray-400 text-sm text-center mb-6">
+          Set up your café in under 30 minutes · 7 days free
+        </p>
 
-        {/* tabs */}
         <div className="flex bg-white rounded-2xl p-1 mb-6 shadow-sm">
           <button
             onClick={() => setActiveTab('owner')}
@@ -239,8 +281,16 @@ function LandingPage() {
             <div className="w-16 h-16 bg-[#8B9D6A]/10 rounded-full flex items-center justify-center text-3xl mx-auto mb-4">
               ✓
             </div>
-            <h3 className="display-font text-xl font-semibold mb-2">You're on the list!</h3>
-            <p className="text-gray-400 text-sm">We'll reach out within 24 hours to get your café set up.</p>
+            <h3 className="display-font text-xl font-semibold mb-2">Welcome to DineFlow!</h3>
+            <p className="text-gray-400 text-sm mb-4">
+              Your café is set up. Your 7-day free trial starts now.
+            </p>
+            <Link
+              to="/login"
+              className="inline-block bg-[#8B9D6A] text-white px-8 py-3 rounded-2xl font-medium text-sm"
+            >
+              Login to your dashboard →
+            </Link>
           </div>
         ) : (
           <div className="bg-white rounded-2xl p-6 shadow-sm">
@@ -337,7 +387,7 @@ function LandingPage() {
               disabled={loading}
               className="w-full bg-[#8B9D6A] text-white py-4 rounded-2xl font-semibold text-sm mt-6 disabled:opacity-50"
             >
-              {loading ? 'Setting up...' : activeTab === 'owner' ? 'Create my café →' : 'Login to dashboard →'}
+              {loading ? 'Setting up...' : activeTab === 'owner' ? 'Start my free trial →' : 'Login to dashboard →'}
             </button>
 
             <p className="text-center text-xs text-gray-400 mt-4">
@@ -357,6 +407,10 @@ function LandingPage() {
           <span className="font-bold text-gray-900">DineFlow</span>
         </div>
         <p className="text-gray-400 text-xs">© 2026 DineFlow. Built for Indian cafés.</p>
+        <p className="text-gray-400 text-xs mt-1">
+          Questions? WhatsApp us at{' '}
+          <a href="https://wa.me/919876543210" className="text-[#8B9D6A]">+91 98765 43210</a>
+        </p>
       </div>
 
     </div>
